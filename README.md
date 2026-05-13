@@ -76,9 +76,8 @@ handler.setHandler("PATHFIND", (message) => {
 });
 
 // To actually enable listening for messages
-OBR.scene.onReadyChange(ready => {
-    if (!ready) handler.unregister();
-    else handler.register();
+OBR.onReady(() => {
+    handler.register();
 });
 ```
 
