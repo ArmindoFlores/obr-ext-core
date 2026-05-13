@@ -1,0 +1,40 @@
+{
+  "name": "@armindoflores/obr-ext-core",
+  "version": "0.0.1",
+  "description": "Base package to create Owlbear Rodeo extension APIs using the broadcast feature",
+  "homepage": "https://github.com/ArmindoFlores/obr-ext-core#readme",
+  "bugs": {
+    "url": "https://github.com/ArmindoFlores/obr-ext-core/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ArmindoFlores/obr-ext-core.git"
+  },
+  "license": "MIT",
+  "author": "Armindo Flores",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@owlbear-rodeo/sdk": "^3.1.0",
+    "eslint": "^10.3.0",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3"
+  },
+  "peerDependencies": {
+    "@owlbear-rodeo/sdk": "^3.1.0"
+  }
+}
