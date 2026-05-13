@@ -26,7 +26,11 @@ export class APIHandler<MRegistry extends AnyRegistry = never> {
         this.$unknownMessageHandler = options?.unknownMessageHandler;
     }
 
-    setHandler<T extends keyof MRegistry>(messageType: T, handler: (m: MRegistry[T]["request"]) => Omit<MRegistry[T]["response"] | MessageError, "id">) {
+    async sendMessage(message: MessageBase) {
+        OBR.broadcast.sendMessage(this.sendChannel, message, { destination: this.destination });
+    }
+
+    setHandler<T extends keyof MRegistry>(messageType: T, handler: (this: APIHandler<MRegistry>, m: MRegistry[T]["request"]) => Promise<Omit<MRegistry[T]["response"] | MessageError, "id">>) {
         this.$handlers[messageType] = handler;
     }
 
@@ -35,7 +39,7 @@ export class APIHandler<MRegistry extends AnyRegistry = never> {
             this.$unregister();
         }
 
-        this.$unregister = OBR.broadcast.onMessage(this.receiveChannel, event => {
+        this.$unregister = OBR.broadcast.onMessage(this.receiveChannel, async event => {
             const message = event.data as MessageBase;
 
             if (typeof message.id !== "string") {
@@ -52,7 +56,7 @@ export class APIHandler<MRegistry extends AnyRegistry = never> {
             let response: MessageBase;
             try {
                 response = {
-                    ...handler(message),
+                    ...(await handler.call(this, message)),
                     id: message.id,
                 };
             }
@@ -60,7 +64,7 @@ export class APIHandler<MRegistry extends AnyRegistry = never> {
                 response = makeErrorMessage(message.id, (error as Error).message);
             }
 
-            OBR.broadcast.sendMessage(this.sendChannel, response, { destination: this.destination });
+            this.sendMessage(response);
         });
     }
 

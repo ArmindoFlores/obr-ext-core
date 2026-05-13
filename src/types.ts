@@ -1,3 +1,5 @@
+import type { APIHandler } from "./handler";
+
 export interface MessageBase {
     id: string;
     type: string;
@@ -12,8 +14,9 @@ export type AnyRegistry = Record<string, { request: MessageBase; response: Messa
 
 export type APIHandlerFunction<MRegistry extends AnyRegistry> = {
     [T in keyof MRegistry]: (
+        this: APIHandler<MRegistry>,
         message: MRegistry[T]["request"]
-    ) => Omit<MRegistry[T]["response"] | MessageError, "id">;
+    ) => Promise<Omit<MRegistry[T]["response"] | MessageError, "id">>;
 }[keyof MRegistry];
 
 export type OBRSendDestination = "ALL" | "REMOTE" | "LOCAL";
