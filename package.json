@@ -1,6 +1,6 @@
 {
   "name": "@armindoflores/obr-ext-core",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Base package to create Owlbear Rodeo extension APIs using the broadcast feature",
   "homepage": "https://github.com/ArmindoFlores/obr-ext-core#readme",
   "bugs": {

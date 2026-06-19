@@ -23,9 +23,10 @@ export class ClientAPI<MRegistry extends AnyRegistry = never> {
         );
     }
 
-    async request<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, timeoutMs?: number, destination?: OBRSendDestination): Promise<MRegistry[T]["response"]>;
-    async request<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, timeoutMs: number | undefined, destination: OBRSendDestination | undefined, raiseOnError: boolean): Promise<MRegistry[T]["response"] | MessageError>;
-    async request<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, timeoutMs: number = 15000, destination?: OBRSendDestination, raiseOnError?: boolean): Promise<MRegistry[T]["response"] | MessageError> {
+    async request<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, timeoutMs?: number, destination?: OBRSendDestination): Promise<MRegistry[T]["response"] | MessageError>;
+    async request<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, timeoutMs: number | undefined, destination: OBRSendDestination | undefined, raiseOnError: true): Promise<MRegistry[T]["response"]>;
+    async request<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, timeoutMs: number | undefined, destination: OBRSendDestination | undefined, raiseOnError: false): Promise<MRegistry[T]["response"] | MessageError>;
+    async request<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, timeoutMs?: number, destination?: OBRSendDestination, raiseOnError?: boolean): Promise<MRegistry[T]["response"] | MessageError> {
         const messageId = message.id ?? crypto.randomUUID();
         return await new Promise((resolve, reject) => {
             let interval: number;
@@ -53,7 +54,7 @@ export class ClientAPI<MRegistry extends AnyRegistry = never> {
                     "Timed out while waiting for response",
                     { message }
                 ));
-            }, timeoutMs);
+            }, timeoutMs ?? 15000);
             OBR.broadcast.sendMessage(
                 this.sendChannel,
                 {...message, id: messageId},
