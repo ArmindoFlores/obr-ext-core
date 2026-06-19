@@ -14,7 +14,16 @@ export class ClientAPI<MRegistry extends AnyRegistry = never> {
         this.destination = destination ?? "ALL";
     }
 
-    async request<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, timeoutMs: number = 15000): Promise<MRegistry[T]["response"] | MessageError> {
+    async send<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, destination?: OBRSendDestination): Promise<void> {
+        const messageId = message.id ?? crypto.randomUUID();
+        await OBR.broadcast.sendMessage(
+            this.sendChannel,
+            {...message, id: messageId},
+            { destination: destination ?? this.destination }
+        );
+    }
+
+    async request<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, timeoutMs: number = 15000, destination?: OBRSendDestination, raiseOnError?: boolean): Promise<MRegistry[T]["response"] | MessageError> {
         const messageId = message.id ?? crypto.randomUUID();
         return await new Promise((resolve, reject) => {
             let interval: number;
@@ -24,12 +33,16 @@ export class ClientAPI<MRegistry extends AnyRegistry = never> {
                 if (response.id !== messageId) return;
                 if (typeof response.type !== "string") {
                     unregister();
+                    clearInterval(interval);
                     reject(new APIError("Received malformatted message", response));
                     return;
-                } 
-                
+                }                
                 unregister();
                 clearInterval(interval);
+                if (raiseOnError && response.type === "ERROR") {
+                    reject(new Error((response as MessageError).error));
+                    return;
+                }
                 resolve(response);
             });
             interval = window.setTimeout(() => {
@@ -42,7 +55,7 @@ export class ClientAPI<MRegistry extends AnyRegistry = never> {
             OBR.broadcast.sendMessage(
                 this.sendChannel,
                 {...message, id: messageId},
-                { destination: this.destination }
+                { destination: destination ?? this.destination }
             );
         });
     }

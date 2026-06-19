@@ -5,8 +5,9 @@
     "outDir": "./dist",
 
     // Environment Settings
-    "module": "es2022",
+    "module": "esnext",
     "target": "esnext",
+    "moduleResolution": "bundler",
     "types": [],
 
     // Other Outputs
@@ -23,7 +24,6 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
     "skipLibCheck": true,
   }
 }
