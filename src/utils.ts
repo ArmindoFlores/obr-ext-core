@@ -7,3 +7,5 @@ export function isErrorMessage(message: MessageBase): message is MessageError {
 export function makeErrorMessage(id: string, message: string): MessageError {
     return { id, type: "ERROR", error: message };
 }
+
+export const NoResponse = Symbol("NoResponse");

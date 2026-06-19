@@ -1,5 +1,6 @@
-import type { APIHandlerFunction, AnyRegistry, MessageBase, MessageError, OBRSendDestination } from "./types";
+import type { APIHandlerFunction, AnyRegistry, MessageBase, MessageError, NoResponseType, OBRSendDestination } from "./types";
 
+import { NoResponse } from "./utils";
 import OBR from "@owlbear-rodeo/sdk";
 import { makeErrorMessage } from "./utils";
 
@@ -32,7 +33,7 @@ export class APIHandler<MRegistry extends AnyRegistry = never> {
         await OBR.broadcast.sendMessage(this.sendChannel, message, { destination: this.destination });
     }
 
-    setHandler<T extends keyof MRegistry>(messageType: T, handler: (this: APIHandler<MRegistry>, m: MRegistry[T]["request"]) => Promise<Omit<MRegistry[T]["response"] | MessageError, "id">>) {
+    setHandler<T extends keyof MRegistry>(messageType: T, handler: (this: APIHandler<MRegistry>, m: MRegistry[T]["request"]) => Promise<Omit<MRegistry[T]["response"], "id"> | Omit<MessageError, "id"> | NoResponseType>) {
         this.$handlers[messageType] = handler;
     }
 
@@ -66,10 +67,16 @@ export class APIHandler<MRegistry extends AnyRegistry = never> {
 
             let response: MessageBase;
             try {
-                response = {
-                    ...(await handler.call(this, message)),
-                    id: message.id,
-                };
+                const handlerResult = await handler.call(this, message);
+                if (handlerResult === NoResponse) {
+                    return;
+                }
+                else {
+                    response = {
+                        ...(handlerResult as MessageBase),
+                        id: message.id,
+                    };
+                }
             }
             catch (error) {
                 response = makeErrorMessage(message.id, (error as Error).message);
