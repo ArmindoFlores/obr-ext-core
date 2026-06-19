@@ -1,5 +1,6 @@
+import type { APIHandlerFunction, AnyRegistry, MessageBase, MessageError, OBRSendDestination } from "./types";
+
 import OBR from "@owlbear-rodeo/sdk";
-import type { AnyRegistry, APIHandlerFunction, MessageBase, MessageError, OBRSendDestination } from "./types";
 import { makeErrorMessage } from "./utils";
 
 export interface APIHandlerOptions {
@@ -16,6 +17,7 @@ export class APIHandler<MRegistry extends AnyRegistry = never> {
     private $invalidMessageHandler: ((message: unknown) => void) | undefined;
     private $unknownMessageHandler: ((message: MessageBase) => void) | undefined;
     private $handlers: Partial<Record<keyof MRegistry, APIHandlerFunction<MRegistry>>> = {};
+    private $messageFilters: Partial<Record<keyof MRegistry, (message: MessageBase) => boolean>> = {};
     private $unregister: (() => void) | undefined;
 
     constructor(sendChannel: string, receiveChannel: string, options?: Partial<APIHandlerOptions>) {
@@ -27,11 +29,15 @@ export class APIHandler<MRegistry extends AnyRegistry = never> {
     }
 
     async sendMessage(message: MessageBase) {
-        OBR.broadcast.sendMessage(this.sendChannel, message, { destination: this.destination });
+        await OBR.broadcast.sendMessage(this.sendChannel, message, { destination: this.destination });
     }
 
     setHandler<T extends keyof MRegistry>(messageType: T, handler: (this: APIHandler<MRegistry>, m: MRegistry[T]["request"]) => Promise<Omit<MRegistry[T]["response"] | MessageError, "id">>) {
         this.$handlers[messageType] = handler;
+    }
+
+    setMessageFilter<T extends keyof MRegistry>(messageType: T, filter: (m: MRegistry[T]["request"]) => boolean) {
+        this.$messageFilters[messageType] = filter;
     }
 
     register() {
@@ -50,6 +56,11 @@ export class APIHandler<MRegistry extends AnyRegistry = never> {
             const handler = this.$handlers[message.type];
             if (handler === undefined) {
                 this.$unknownMessageHandler?.(message);
+                return;
+            }
+
+            const filter = this.$messageFilters[message.type];
+            if (filter && !filter(message)) {
                 return;
             }
 
