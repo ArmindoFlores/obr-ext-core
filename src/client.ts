@@ -23,6 +23,8 @@ export class ClientAPI<MRegistry extends AnyRegistry = never> {
         );
     }
 
+    async request<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, timeoutMs?: number, destination?: OBRSendDestination): Promise<MRegistry[T]["response"]>;
+    async request<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, timeoutMs: number | undefined, destination: OBRSendDestination | undefined, raiseOnError: boolean): Promise<MRegistry[T]["response"] | MessageError>;
     async request<T extends keyof MRegistry>(message: OptionalKeys<MRegistry[T]["request"], "id">, timeoutMs: number = 15000, destination?: OBRSendDestination, raiseOnError?: boolean): Promise<MRegistry[T]["response"] | MessageError> {
         const messageId = message.id ?? crypto.randomUUID();
         return await new Promise((resolve, reject) => {
